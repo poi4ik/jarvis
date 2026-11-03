@@ -49,7 +49,7 @@ pub fn register(lua: &Lua, jarvis: &Table) -> mlua::Result<()> {
     // jarvis.http.json(url) - GET + parse JSON
     let json_fn = lua.create_function(|lua, url: String| {
         let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(30))
+            .timeout(Duration::from_secs(10))
             .build()
             .map_err(|e| mlua::Error::runtime(e.to_string()))?;
 
@@ -98,7 +98,7 @@ fn http_request_with_headers(
     headers: HashMap<String, String>,
 ) -> mlua::Result<Table> {
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(30))
+        .timeout(Duration::from_secs(10))
         .build()
         .map_err(|e| mlua::Error::runtime(e.to_string()))?;
 

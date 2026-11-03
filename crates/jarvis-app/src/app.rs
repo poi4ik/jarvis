@@ -53,6 +53,7 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
     ipc::send(IpcEvent::Idle);
 
     // ### WAKE WORD DETECTION LOOP
+    let mut last_speech: Option<String> = None;
     'wake_word: loop {
         if should_stop() {
             info!("Stop signal received, shutting down...");
@@ -83,6 +84,7 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
 
                     for buffered_frame in audio_buffer.drain_all() {
                         listener::data_callback(&buffered_frame);
+                        remember_speech(&mut last_speech, stt::recognize(&buffered_frame, false));
                     }
 
                     vad_state = VadState::VoiceActive;
@@ -92,7 +94,7 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
 
             VadState::VoiceActive => {
                 // dual-feed: speech recognizer gets frames in parallel with wake word detector
-                let _ = stt::recognize(&processed.samples, false);
+                remember_speech(&mut last_speech, stt::recognize(&processed.samples, false));
 
                 // feed to wake word detector
                 if let Some(_keyword_index) = listener::data_callback(&processed.samples) {
@@ -108,11 +110,24 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
                     for _ in 0..sniff_frames {
                         recorder::read_microphone(&mut frame_buffer);
                         let processed = audio_processing::process(&frame_buffer);
-                        stt::recognize(&processed.samples, false);
+                        remember_speech(&mut last_speech, stt::recognize(&processed.samples, false));
                     }
 
-                    ipc::send(IpcEvent::Listening);
-                    recognize_command(&mut frame_buffer, &rt, frame_length, sample_rate, true);
+                    // wake word + command said in one phrase: the speech recognizer
+                    // already finalized it during dual-feed, so execute it right away
+                    let command_text = last_speech.take().map(|t| strip_wake_phrases(&t));
+                    match command_text {
+                        Some(text) if text.chars().count() >= 3 => {
+                            info!("Wake word + command in one phrase: '{}'", text);
+                            process_text_command(&text, &rt);
+                        }
+                        _ => {
+                            voices::play_reply();
+                            stt::reset_speech_recognizer();
+                            ipc::send(IpcEvent::Listening);
+                            recognize_command(&mut frame_buffer, &rt, frame_length, sample_rate, false);
+                        }
+                    }
 
                     // reset state after command
                     vad_state = VadState::WaitingForVoice;
@@ -136,6 +151,7 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
                         debug!("VAD: Silence timeout, returning to wait state");
                         vad_state = VadState::WaitingForVoice;
                         silence_frames = 0;
+                        last_speech = None;
                         stt::reset_wake_recognizer();
                         stt::reset_speech_recognizer(); // reset since we were dual-feeding
                     }
@@ -432,4 +448,22 @@ pub fn close(code: i32) {
     voices::play_goodbye();
     ipc::send(IpcEvent::Stopping);
     std::process::exit(code);
+}
+
+// keep the last non-empty final result of the speech recognizer
+fn remember_speech(last: &mut Option<String>, result: Option<String>) {
+    if let Some(text) = result {
+        if !text.trim().is_empty() {
+            *last = Some(text);
+        }
+    }
+}
+
+// remove wake phrases ("джарвис" etc.) from recognized text
+fn strip_wake_phrases(text: &str) -> String {
+    let mut text = text.to_lowercase();
+    for wp in config::get_wake_phrases(&i18n::get_language()) {
+        text = text.replace(wp, "");
+    }
+    text.trim().to_string()
 }
