@@ -2,7 +2,7 @@ use std::sync::mpsc::Receiver;
 use std::time::SystemTime;
 
 use jarvis_core::{
-    audio_buffer::AudioRingBuffer,
+    audio, audio_buffer::AudioRingBuffer,
     audio_processing, commands, config, i18n, intent,
     ipc::{self, IpcEvent},
     listener, recorder, slots, stt, voices, COMMANDS_LIST,
@@ -54,6 +54,7 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
 
     // ### WAKE WORD DETECTION LOOP
     let mut last_speech: Option<String> = None;
+    let mut was_playing = false;
     'wake_word: loop {
         if should_stop() {
             info!("Stop signal received, shutting down...");
@@ -68,6 +69,24 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
         }
 
         recorder::read_microphone(&mut frame_buffer);
+
+        // don't listen to our own voice coming from the speakers
+        if audio::is_playing() {
+            if !was_playing {
+                was_playing = true;
+            }
+            continue 'wake_word;
+        }
+        if was_playing {
+            was_playing = false;
+            vad_state = VadState::WaitingForVoice;
+            silence_frames = 0;
+            last_speech = None;
+            audio_buffer.clear();
+            stt::reset_wake_recognizer();
+            stt::reset_speech_recognizer();
+        }
+
         let processed = audio_processing::process(&frame_buffer);
 
         match vad_state {
@@ -115,17 +134,21 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
 
                     // wake word + command said in one phrase: the speech recognizer
                     // already finalized it during dual-feed, so execute it right away
-                    let command_text = last_speech.take().map(|t| strip_wake_phrases(&t));
+                    let command_text = last_speech
+                        .take()
+                        .filter(|t| contains_wake_phrase(t))
+                        .map(|t| strip_wake_phrases(&t));
                     match command_text {
                         Some(text) if text.chars().count() >= 3 => {
                             info!("Wake word + command in one phrase: '{}'", text);
                             process_text_command(&text, &rt);
                         }
                         _ => {
-                            voices::play_reply();
-                            stt::reset_speech_recognizer();
+                            // speech recognizer usually finalizes ~1s after the wake grammar,
+                            // keep feeding it: the prefed path handles "wake word only" (reply)
+                            // and "wake word + command" in its first result
                             ipc::send(IpcEvent::Listening);
-                            recognize_command(&mut frame_buffer, &rt, frame_length, sample_rate, false);
+                            recognize_command(&mut frame_buffer, &rt, frame_length, sample_rate, true);
                         }
                     }
 
@@ -194,6 +217,15 @@ fn recognize_command(
         }
 
         recorder::read_microphone(frame_buffer);
+
+        // ignore our own reply sound / speech, start the command after it
+        if audio::is_playing() {
+            stt::reset_speech_recognizer();
+            audio_buffer.clear();
+            silence_frames = 0;
+            continue;
+        }
+
         let processed = audio_processing::process(frame_buffer);
 
         match vad_state {
@@ -466,4 +498,11 @@ fn strip_wake_phrases(text: &str) -> String {
         text = text.replace(wp, "");
     }
     text.trim().to_string()
+}
+
+fn contains_wake_phrase(text: &str) -> bool {
+    let text = text.to_lowercase();
+    config::get_wake_phrases(&i18n::get_language())
+        .iter()
+        .any(|wp| text.contains(wp))
 }

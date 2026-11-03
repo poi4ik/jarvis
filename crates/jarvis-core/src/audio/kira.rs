@@ -41,7 +41,8 @@ pub fn play_sound(filename: &PathBuf) {
     // load the file
     match StaticSoundData::from_file(filename) {
         Ok(sound_data) => {
-            // sound_data.duration() can be used in order to sleep, if (for some reason) blocking behaviour is required
+            // remember until when we are playing, so the microphone can ignore our own voice
+            super::mark_playing(sound_data.duration());
 
             // play it (non-blocking)
             if let Some(manager) = MANAGER.get() {

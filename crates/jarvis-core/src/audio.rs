@@ -55,6 +55,28 @@ pub fn init() -> Result<(), ()> {
     Ok(())
 }
 
+static PLAYING_UNTIL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+// extra time after playback during which the microphone is still ignored (room echo)
+const PLAYBACK_TAIL_MS: u64 = 400;
+
+fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+pub(crate) fn mark_playing(duration: std::time::Duration) {
+    let until = now_ms() + duration.as_millis() as u64 + PLAYBACK_TAIL_MS;
+    PLAYING_UNTIL_MS.fetch_max(until, std::sync::atomic::Ordering::Relaxed);
+}
+
+// true while Jarvis itself is speaking (plus a short tail)
+pub fn is_playing() -> bool {
+    now_ms() < PLAYING_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 pub fn play_sound(filename: &PathBuf) {
     let audio_type = match AUDIO_TYPE.get() {
         Some(t) => t,
