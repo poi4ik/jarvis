@@ -1,0 +1,56 @@
+[[commands]]
+id = "jarvis_restart"
+type = "cli"
+description = "Restart Jarvis service"
+cli_cmd = "systemctl"
+cli_args = ["--user", "--no-block", "restart", "jarvis"]
+
+[commands.phrases]
+ru = ["перезагрузись", "перезагрузи себя", "выполни перезагрузку", "перезапустись"]
+en = ["restart yourself", "reboot yourself"]
+
+[commands.sounds]
+ru = ["ok1", "ok2", "ok3"]
+
+
+[[commands]]
+id = "jarvis_insult"
+type = "voice"
+description = "Reaction to insult"
+
+[commands.phrases]
+ru = ["ты дурак", "ты глупый", "ты тупой"]
+
+[commands.sounds]
+ru = ["stupid"]
+
+
+[[commands]]
+id = "jarvis_thanks"
+type = "voice"
+description = "Reaction to thanks and praise"
+
+[commands.phrases]
+ru = [
+  "спасибо", "молодец", "респект", "ты супер", "отличная работа", "ты крут",
+  "классная шутка", "очень смешно", "ты меня рассмешил", "это было весело",
+]
+en = ["thank you", "thanks", "good job"]
+
+[commands.sounds]
+ru = ["thanks"]
+
+
+[[commands]]
+id = "jarvis_joke"
+type = "voice"
+description = "Tell a joke"
+
+[commands.phrases]
+ru = [
+  "расскажи анекдот", "расскажи шутку", "пошути", "рассмеши", "развесели меня",
+  "мне скучно", "хочу шутку", "хочу анекдот", "расскажи что нибудь смешное", "хочу посмеяться",
+]
+
+[commands.sounds]
+ru = ["joke1", "joke2", "joke3", "joke4", "joke5", "joke6", "joke7", "joke8"]
