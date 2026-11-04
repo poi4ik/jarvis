@@ -1,0 +1,89 @@
+[[commands]]
+id = "screen_on"
+type = "cli"
+description = "Turn the local monitor on"
+cli_cmd = "sh"
+cli_args = ["scripts/display_control.sh", "screen_on"]
+
+[commands.phrases]
+ru = [
+  "включи экран",
+  "включи монитор",
+  "разбуди экран",
+  "покажи экран",
+]
+en = [
+  "turn on screen",
+  "turn on monitor",
+]
+
+[commands.sounds]
+ru = ["ok1", "ok2", "ok3"]
+
+
+[[commands]]
+id = "screen_off"
+type = "cli"
+description = "Turn the local monitor off (DPMS)"
+cli_cmd = "sh"
+cli_args = ["scripts/display_control.sh", "screen_off"]
+
+[commands.phrases]
+ru = [
+  "выключи экран",
+  "выключи монитор",
+  "погаси экран",
+  "отключи экран",
+]
+en = [
+  "turn off screen",
+  "turn off monitor",
+]
+
+[commands.sounds]
+ru = ["ok1", "ok2", "ok3"]
+
+
+[[commands]]
+id = "terminal_on"
+type = "cli"
+description = "Open a terminal window on the local monitor"
+cli_cmd = "sh"
+cli_args = ["scripts/display_control.sh", "terminal_on"]
+
+[commands.phrases]
+ru = [
+  "включи терминал",
+  "открой терминал",
+  "запусти терминал",
+  "открой консоль",
+]
+en = [
+  "open terminal",
+  "turn on terminal",
+]
+
+[commands.sounds]
+ru = ["ok1", "ok2", "ok3"]
+
+
+[[commands]]
+id = "terminal_off"
+type = "cli"
+description = "Close the terminal window opened by Jarvis"
+cli_cmd = "sh"
+cli_args = ["scripts/display_control.sh", "terminal_off"]
+
+[commands.phrases]
+ru = [
+  "выключи терминал",
+  "закрой терминал",
+  "закрой консоль",
+]
+en = [
+  "close terminal",
+  "turn off terminal",
+]
+
+[commands.sounds]
+ru = ["ok1", "ok2", "ok3"]
