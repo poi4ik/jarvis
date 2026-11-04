@@ -4,9 +4,8 @@ commands:
     description: Exit Jarvis
     phrases:
       ru:
-        - "выключись"
         - "завершить работу"
-        - "закройся"
+        - "заверши работу"
       en:
         - "exit"
         - "quit"
