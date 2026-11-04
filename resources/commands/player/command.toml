@@ -1,0 +1,240 @@
+[[commands]]
+id = "player_video"
+type = "cli"
+description = "Play ~/Видео fullscreen in mpv"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "video"]
+
+[commands.phrases]
+ru = [
+  "включи видео",
+  "включи фильм",
+  "запусти видео",
+  "покажи видео",
+  "включи кино",
+]
+en = [
+  "play video",
+  "play movie",
+]
+
+
+[[commands]]
+id = "player_music"
+type = "cli"
+description = "Play ~/Музыка in mpv (audio only, shuffled)"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "music"]
+
+[commands.phrases]
+ru = [
+  "включи музыку",
+  "запусти музыку",
+  "поставь музыку",
+  "включи песни",
+]
+en = [
+  "play music",
+]
+
+
+[[commands]]
+id = "player_pause"
+type = "cli"
+description = "Pause mpv"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "pause"]
+
+[commands.phrases]
+ru = [
+  "пауза",
+  "поставь на паузу",
+  "поставь паузу",
+  "останови видео",
+  "останови музыку",
+]
+en = [
+  "pause",
+]
+
+
+[[commands]]
+id = "player_resume"
+type = "cli"
+description = "Resume mpv"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "resume"]
+
+[commands.phrases]
+ru = [
+  "продолжи",
+  "продолжай",
+  "играй дальше",
+  "продолжи видео",
+  "продолжи музыку",
+  "сними с паузы",
+]
+en = [
+  "resume",
+  "continue",
+]
+
+
+[[commands]]
+id = "player_stop"
+type = "cli"
+description = "Quit mpv"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "stop"]
+
+[commands.phrases]
+ru = [
+  "выключи видео",
+  "выключи музыку",
+  "выключи плеер",
+  "закрой плеер",
+  "закрой видео",
+]
+en = [
+  "stop player",
+  "close player",
+]
+
+
+[[commands]]
+id = "player_louder"
+type = "cli"
+description = "Volume up"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "louder"]
+
+[commands.phrases]
+ru = [
+  "громче",
+  "сделай громче",
+  "прибавь звук",
+  "погромче",
+]
+en = [
+  "louder",
+  "volume up",
+]
+
+
+[[commands]]
+id = "player_quieter"
+type = "cli"
+description = "Volume down"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "quieter"]
+
+[commands.phrases]
+ru = [
+  "тише",
+  "сделай тише",
+  "убавь звук",
+  "потише",
+]
+en = [
+  "quieter",
+  "volume down",
+]
+
+
+[[commands]]
+id = "player_forward"
+type = "cli"
+description = "Seek forward 30 seconds"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "forward"]
+
+[commands.phrases]
+ru = [
+  "перемотай вперёд",
+  "перемотай вперед",
+  "мотай вперёд",
+  "вперёд",
+]
+en = [
+  "forward",
+  "skip forward",
+]
+
+
+[[commands]]
+id = "player_back"
+type = "cli"
+description = "Seek back 15 seconds"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "back"]
+
+[commands.phrases]
+ru = [
+  "перемотай назад",
+  "мотай назад",
+  "назад",
+]
+en = [
+  "rewind",
+  "go back",
+]
+
+
+[[commands]]
+id = "player_next"
+type = "cli"
+description = "Next playlist entry"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "next"]
+
+[commands.phrases]
+ru = [
+  "следующее видео",
+  "следующий трек",
+  "следующая песня",
+  "следующая серия",
+  "дальше",
+]
+en = [
+  "next",
+  "next track",
+]
+
+
+[[commands]]
+id = "player_prev"
+type = "cli"
+description = "Previous playlist entry"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "prev"]
+
+[commands.phrases]
+ru = [
+  "предыдущее видео",
+  "предыдущий трек",
+  "предыдущая песня",
+  "предыдущая серия",
+]
+en = [
+  "previous",
+  "previous track",
+]
+
+
+[[commands]]
+id = "player_fullscreen"
+type = "cli"
+description = "Toggle mpv fullscreen"
+cli_cmd = "python3"
+cli_args = ["scripts/mpv_control.py", "fullscreen"]
+
+[commands.phrases]
+ru = [
+  "на весь экран",
+  "полноэкранный режим",
+  "сверни видео",
+  "выйди из полноэкранного режима",
+]
+en = [
+  "fullscreen",
+]
