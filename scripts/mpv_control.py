@@ -3,7 +3,8 @@
 
 Usage: mpv_control.py <action>
 
-  video        play ~/Видео as a playlist, fullscreen on the local monitor
+  video        play ~/Видео as a playlist, fullscreen on the local monitor,
+               resuming the last watched video and position
   music        play ~/Музыка as a shuffled playlist, audio only
   pause        pause playback
   resume       resume playback
@@ -33,6 +34,10 @@ SOCK = os.path.join(RUNTIME, "jarvis-mpv.sock")
 HOME = Path.home()
 VIDEO_DIR = HOME / "Видео"
 MUSIC_DIR = HOME / "Музыка"
+STATE_DIR = Path(os.environ.get("XDG_STATE_HOME") or HOME / ".local/state") / "jarvis"
+VIDEO_STATE = STATE_DIR / "mpv-video.txt"
+RESUME_LUA = Path(__file__).resolve().parent / "mpv_resume.lua"
+VIDEO_EXT = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".m4v", ".wmv", ".flv", ".mpg", ".mpeg", ".ts"}
 
 os.environ.setdefault("DISPLAY", ":0")
 os.environ.setdefault("XAUTHORITY", str(HOME / ".Xauthority"))
@@ -60,29 +65,52 @@ def running():
     return ipc("get_property", "pid", quiet=True) is not None
 
 
+def saved_video():
+    try:
+        return VIDEO_STATE.read_text(encoding="utf-8").splitlines()[0]
+    except (OSError, IndexError):
+        return None
+
+
 def start(path, audio_only):
-    if not path.is_dir() or not any(path.iterdir()):
+    if audio_only:
+        entries = [str(path)] if path.is_dir() and any(path.iterdir()) else []
+    else:
+        entries = sorted(
+            str(f) for f in path.iterdir() if f.is_file() and f.suffix.lower() in VIDEO_EXT
+        ) if path.is_dir() else []
+    if not entries:
         print(f"{path} is empty", file=sys.stderr)
         sys.exit(1)
     if running():
         ipc("quit")
-        time.sleep(0.5)
+        time.sleep(1)
     args = [
         "mpv",
         f"--input-ipc-server={SOCK}",
         "--really-quiet",
         "--idle=no",
         "--volume=70",
-        str(path),
     ]
     if audio_only:
-        args[1:1] = ["--no-video", "--shuffle", "--loop-playlist=inf"]
+        args += ["--no-video", "--shuffle", "--loop-playlist=inf"]
     else:
         subprocess.run(["xset", "dpms", "force", "on"], check=False)
         subprocess.run(["xset", "s", "reset"], check=False)
-        args[1:1] = ["--fullscreen", "--force-window=yes"]
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        args += [
+            "--fullscreen",
+            "--force-window=yes",
+            f"--script={RESUME_LUA}",
+            f"--script-opts=jarvis_resume-file={VIDEO_STATE}",
+        ]
+        last = saved_video()
+        if last in entries:
+            args.append(f"--playlist-start={entries.index(last)}")
+    # own systemd scope: the player survives a Jarvis restart
+    cmd = ["systemd-run", "--user", "--scope", "--quiet", "--collect", "--"] + args + ["--"] + entries
     subprocess.Popen(
-        args,
+        cmd,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

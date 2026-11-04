@@ -24,6 +24,8 @@ case "$1" in
         xset s reset
         ;;
     screen_off)
+        # pause the player (it remembers the position) before going dark
+        python3 "$(dirname "$0")/mpv_control.py" pause 2>/dev/null
         # give the voice reply time to finish before the screen goes dark
         sleep 1
         xset dpms force off
